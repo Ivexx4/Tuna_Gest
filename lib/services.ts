@@ -110,7 +110,7 @@ export const eventService = {
     return supabase.from('events').select('*, event_attendances(*, member:members(*))').eq('id', eventId).single();
   },
 
-  async createEvent(event: Omit<Event, 'id' | 'created_at' | 'updated_at'>) {
+  async createEvent(event: Omit<Event, 'id' | 'created_at' | 'updated_at'>, baseUrl?: string) {
     return supabase.from('events').insert([event]).select().single();
   },
   
