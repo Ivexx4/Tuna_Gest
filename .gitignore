@@ -32,9 +32,32 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+!.env.local.example  # Permitir exemplo de env
 
 # vercel
 .vercel
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tuna Manager Specific
+# Não fazer commit de ficheiros sensíveis
+.env.local
+credentials.json
+*.key
+*.pem
+
+# Logs
+logs/
+*.log
 
 # typescript
 *.tsbuildinfo
