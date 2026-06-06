@@ -48,7 +48,55 @@ export const memberService = {
     return supabase.from('member_role_history').select('*, old_role:hierarchy_roles!old_role_id(*), new_role:hierarchy_roles!new_role_id(*)').eq('member_id', memberId).order('changed_at', { ascending: false });
   },
 };
+// ============================================================================
+// SERVIÇO DE CARGOS HIERÁRQUICOS (HIERARCHY ROLES)
+// ============================================================================
 
+export const hierarchyRoleService = {
+  // Obter todos os cargos (útil para a tabela principal)
+  async getRoles() {
+    return supabase
+      .from('hierarchy_roles')
+      .select('*')
+      .order('level', { ascending: true });
+  },
+
+  // Obter um cargo específico pelo ID (usado na página de edição)
+  async getRole(roleId: number) {
+    return supabase
+      .from('hierarchy_roles')
+      .select('*')
+      .eq('id', roleId)
+      .single();
+  },
+
+  // Criar um novo cargo
+  async createRole(role: Omit<HierarchyRole, 'id' | 'created_at' | 'updated_at'>) {
+    return supabase
+      .from('hierarchy_roles')
+      .insert([role])
+      .select()
+      .single();
+  },
+
+  // Atualizar um cargo existente (usado na página de edição)
+  async updateRole(roleId: number, updates: Partial<Omit<HierarchyRole, 'id' | 'created_at'>>) {
+    return supabase
+      .from('hierarchy_roles')
+      .update(updates)
+      .eq('id', roleId)
+      .select()
+      .single();
+  },
+
+  // Apagar um cargo
+  async deleteRole(roleId: number) {
+    return supabase
+      .from('hierarchy_roles')
+      .delete()
+      .eq('id', roleId);
+  }
+};
 // ============================================================================
 // SERVIÇO DE EVENTOS
 // ============================================================================
