@@ -20,26 +20,31 @@ export default function NewFinanceTransactionPage() {
 
     try {
       if (attachmentFile) {
-        // Assuming tuna_id is 1 for now
-        const { data: uploadData, error: uploadError } = await financialService.uploadAttachment(attachmentFile, 1, 'transactions'); // 'transactions' is the folder
+        // Faz o upload do comprovante
+        const { data: uploadData, error: uploadError } = await financialService.uploadAttachment(attachmentFile, 1, 'transactions');
         if (uploadError) {
           throw new Error(uploadError.message || 'Erro ao fazer upload do comprovante.');
         }
         attachmentUrls = uploadData?.publicUrl ? [uploadData.publicUrl] : undefined;
       }
 
-      // Por enquanto, usa tuna_id = 1 (pode ser feito dinâmico depois)
-      await financialService.createTransaction({
+      // 1. Constrói o objeto base com os campos obrigatórios
+      // O uso de 'any' aqui previne erros de tipagem estrita do Supabase com os campos opcionais
+      const payload: any = {
         tuna_id: 1,
-        category_id: data.category_id || undefined,
         amount: data.amount,
         type: data.type,
-        description: data.description || undefined,
         transaction_date: data.transaction_date,
-        created_by: data.created_by || undefined,
-        attachments: attachmentUrls, // Use the uploaded attachment URL(s)
-        notes: data.notes || undefined,
-      });
+      };
+
+      // 2. Adiciona os campos opcionais APENAS se eles tiverem valor (evitando enviar undefined)
+      if (data.category_id) payload.category_id = data.category_id;
+      if (data.description) payload.description = data.description;
+      if (data.created_by) payload.created_by = data.created_by;
+      if (attachmentUrls) payload.attachments = attachmentUrls;
+
+      // Cria a transação
+      await financialService.createTransaction(payload);
 
       toast.success(`Transação de ${data.amount.toFixed(2)}€ foi criada com sucesso!`);
       router.push('/finance');
