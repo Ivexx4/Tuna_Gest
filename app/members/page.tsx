@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, useFetch, useDelete } from '@/hooks';
 import { memberService } from '@/lib/services';
-import { Member, Role, Section } from '@/types/database';
+import { Member, HierarchyRole, InstrumentSection } from '@/types/database';
 import AuthenticatedLayout from '@/app/authenticated-layout';
 import MembersTable from '@/components/MembersTable';
 import { Plus, Search, Download } from 'lucide-react'; // Import Download icon
@@ -17,8 +17,8 @@ export default function MembersPage() {
   const { data: members, loading, error, refetch } = useFetch<Member>(
     'members'
   );
-  const { data: roles } = useFetch<Role>('roles');
-  const { data: sections } = useFetch<Section>('sections');
+  const { data: roles } = useFetch<HierarchyRole>('hierarchy_roles');
+  const { data: sections } = useFetch<InstrumentSection>('instrument_sections');
   const { execute: deleteMember, loading: deleteLoading } = useDelete('members');
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -74,7 +74,7 @@ export default function MembersPage() {
   };
 
   // Helper function to convert array of objects to CSV
-  const convertToCSV = (data: Member[], rolesData: Role[], sectionsData: Section[]) => {
+  const convertToCSV = (data: Member[], rolesData: HierarchyRole[], sectionsData: InstrumentSection[]) => {
     const roleMap = new Map(rolesData.map(r => [r.id, r.name]));
     const sectionMap = new Map(sectionsData.map(s => [s.id, s.name]));
 
@@ -85,7 +85,7 @@ export default function MembersPage() {
       member.email || '',
       member.phone || '',
       member.status,
-      member.entry_date ? new Date(member.entry_date).toLocaleDateString('pt-PT') : '',
+      member.joining_date ? new Date(member.joining_date).toLocaleDateString('pt-PT') : '',
       member.role_id ? roleMap.get(member.role_id) || '' : '',
       member.section_id ? sectionMap.get(member.section_id) || '' : ''
     ].join(','));
