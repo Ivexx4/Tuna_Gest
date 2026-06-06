@@ -137,6 +137,9 @@ export const inventoryService = {
   async getItems(tunaId: number) {
     return supabase.from('inventory_items').select('*').eq('tuna_id', tunaId);
   },
+  async getItem(itemId: number) {
+    return supabase.from('inventory_items').select('*').eq('id', itemId).single();
+  },
   async createItem(item: Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>) {
     return supabase.from('inventory_items').insert([item]).select().single();
   },
