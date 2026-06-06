@@ -53,10 +53,10 @@ export function useFetch<T>(
     }
   }, [tableName, query]);
 
-  // Executar fetch ao montar component
-  useState(() => {
+  // Executar fetch ao montar componente
+  useEffect(() => {
     fetchData();
-  });
+  }, [fetchData]);
 
   return {
     data,
@@ -78,8 +78,8 @@ export function useInsert<T>(tableName: string): UseMutationReturn<T> {
     async (data: T) => {
       try {
         setLoading(true);
-        const { data: result, error: err } = await supabase
-          .from(tableName)
+        // Cast para 'any' para evitar erros de tipagem estrita do Supabase SDK
+        const { data: result, error: err } = await (supabase.from(tableName) as any)
           .insert([data])
           .select();
 
@@ -111,8 +111,8 @@ export function useUpdate<T>(tableName: string): UseMutationReturn<T> {
       try {
         setLoading(true);
         const { id, ...updateData } = data;
-        const { data: result, error: err } = await supabase
-          .from(tableName)
+        // Cast para 'any' para evitar erros de tipagem estrita do Supabase SDK
+        const { data: result, error: err } = await (supabase.from(tableName) as any)
           .update(updateData)
           .eq('id', id)
           .select();
@@ -163,4 +163,3 @@ export function useDelete(tableName: string) {
 
   return { loading, error, execute };
 }
-
