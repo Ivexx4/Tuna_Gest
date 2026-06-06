@@ -164,8 +164,11 @@ export const inventoryService = {
 // ============================================================================
 // SERVIÇO FINANCEIRO
 // ============================================================================
+// ============================================================================
+// SERVIÇO FINANCEIRO E DE CATEGORIAS
+// ============================================================================
 export const financialService = {
-  // 👇 Aqui está a correção: adicionado o parâmetro tunaId e o .eq('tuna_id', tunaId)
+  // --- TRANSAÇÕES ---
   async getTransactions(tunaId: number) { 
     return supabase.from('financial_transactions').select('*').eq('tuna_id', tunaId).order('date', { ascending: false }); 
   },
@@ -179,12 +182,6 @@ export const financialService = {
     if (error) return { data: null, error };
     return { data: { publicUrl: supabase.storage.from('tuna-manager-bucket').getPublicUrl(filePath).data.publicUrl }, error: null };
   },
-};
-
-// ============================================================================
-// SERVIÇO DE CATEGORIAS FINANCEIRAS
-// ============================================================================
-export const categoryService = {
   async getCategories() { return supabase.from('financial_categories').select('*'); },
   async getCategory(id: number) { return supabase.from('financial_categories').select('*').eq('id', id).single(); },
   async createCategory(data: any) { return supabase.from('financial_categories').insert([data]).select().single(); },
