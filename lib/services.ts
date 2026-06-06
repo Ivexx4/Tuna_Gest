@@ -150,7 +150,10 @@ export const inventoryService = {
 // SERVIÇO FINANCEIRO
 // ============================================================================
 export const financialService = {
-  async getTransactions() { return supabase.from('financial_transactions').select('*').order('date', { ascending: false }); },
+  // 👇 Aqui está a correção: adicionado o parâmetro tunaId e o .eq('tuna_id', tunaId)
+  async getTransactions(tunaId: number) { 
+    return supabase.from('financial_transactions').select('*').eq('tuna_id', tunaId).order('date', { ascending: false }); 
+  },
   async getTransaction(id: number) { return supabase.from('financial_transactions').select('*').eq('id', id).single(); },
   async createTransaction(transaction: Omit<FinancialTransaction, 'id' | 'created_at' | 'updated_at'>) { return supabase.from('financial_transactions').insert([transaction]).select().single(); },
   async updateTransaction(id: number, updates: any) { return supabase.from('financial_transactions').update(updates).eq('id', id).select().single(); },
@@ -178,7 +181,8 @@ export const categoryService = {
 // SERVIÇO DE PARTITURAS / MÚSICA
 // ============================================================================
 export const musicService = {
-  async getMusics() { return supabase.from('sheet_music').select('*'); },
+  // 👇 Corrigido aqui também por precaução
+  async getMusics(tunaId: number) { return supabase.from('sheet_music').select('*').eq('tuna_id', tunaId); },
   async getMusic(id: number) { return supabase.from('sheet_music').select('*').eq('id', id).single(); },
   async createMusic(data: any) { return supabase.from('sheet_music').insert([data]).select().single(); },
   async updateMusic(id: number, data: any) { return supabase.from('sheet_music').update(data).eq('id', id).select().single(); },
