@@ -9,9 +9,10 @@ interface UserFormProps {
   initialData?: User;
   onSubmit: (data: UserFormData) => void;
   isLoading?: boolean;
+  onCancel?: () => void; // <--- ADICIONA ESTA LINHA
 }
 
-export default function UserForm({ initialData, onSubmit, isLoading }: UserFormProps) {
+export default function UserForm({ initialData, onSubmit, isLoading, onCancel }: UserFormProps) {
   const {
     register,
     handleSubmit,
@@ -21,11 +22,9 @@ export default function UserForm({ initialData, onSubmit, isLoading }: UserFormP
     defaultValues: {
       email: initialData?.email || '',
       name: initialData?.name || '',
-      // Corrigido: Garantir que o valor é um dos permitidos pelo schema
       role: (initialData?.role === 'admin' || initialData?.role === 'editor' || initialData?.role === 'viewer') 
         ? initialData.role 
         : 'viewer',
-      // Corrigido: Garantir que o valor é um dos permitidos pelo schema
       status: (initialData?.status === 'active' || initialData?.status === 'inactive' || initialData?.status === 'pending') 
         ? initialData.status 
         : 'pending',
@@ -72,13 +71,25 @@ export default function UserForm({ initialData, onSubmit, isLoading }: UserFormP
         {errors.status && <p className="text-red-500 text-sm">{errors.status.message}</p>}
       </div>
 
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 disabled:bg-gray-400"
-      >
-        {isLoading ? 'Salvando...' : 'Salvar Utilizador'}
-      </button>
+      <div className="flex gap-2">
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="flex-1 bg-blue-600 text-white py-2 rounded font-semibold hover:bg-blue-700 disabled:bg-gray-400"
+        >
+          {isLoading ? 'Salvando...' : 'Salvar Utilizador'}
+        </button>
+        
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-4 py-2 border border-gray-300 rounded font-semibold hover:bg-gray-50"
+          >
+            Cancelar
+          </button>
+        )}
+      </div>
     </form>
   );
 }
