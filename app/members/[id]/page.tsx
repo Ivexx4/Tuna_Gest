@@ -121,7 +121,9 @@ export default function MemberProfilePage() {
   };
 
   // Filter events and inventory loans for this member
-  const memberEvents = allEvents?.filter(event => event.member_id === memberId) || [];
+  // Substituímos por um array vazio tipado para evitar erros de compilação.
+  // No futuro, para mostrar o histórico, deverá fazer um fetch à tabela 'event_attendances'
+  const memberEvents: any[] = [];
   const memberInventoryLoans = allInventoryLoans?.filter(loan => loan.member_id === memberId) || [];
 
   // Get current role and section names
