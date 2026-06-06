@@ -98,23 +98,38 @@ export const eventService = {
   async getEvents(tunaId: number) {
     return supabase.from('events').select('*').eq('tuna_id', tunaId).order('event_date', { ascending: false });
   },
+  
+  // 👇 Adicionada a função simples para obter apenas um evento
+  async getEvent(eventId: number) {
+    return supabase.from('events').select('*').eq('id', eventId).single();
+  },
+
+  // 👇 Adicionada a função que a página de edição estava a pedir!
+  async getEventWithAttendances(eventId: number) {
+    // Traz o evento juntamente com as presenças e os dados de cada membro associado
+    return supabase.from('events').select('*, event_attendances(*, member:members(*))').eq('id', eventId).single();
+  },
+
   async createEvent(event: Omit<Event, 'id' | 'created_at' | 'updated_at'>) {
     return supabase.from('events').insert([event]).select().single();
   },
+  
   async updateEvent(eventId: number, updates: Partial<Omit<Event, 'id' | 'tuna_id' | 'created_at'>>) {
     return supabase.from('events').update(updates).eq('id', eventId).select().single();
   },
+  
   async deleteEvent(eventId: number) {
     return supabase.from('events').delete().eq('id', eventId);
   },
+  
   async getAttendanceByToken(token: string) {
     return supabase.from('event_attendances').select('*, event:events(*), member:members(*)').eq('token', token).single();
   },
+  
   async updateAttendanceByToken(token: string, status: 'confirmed' | 'declined' | 'absent') {
     return supabase.from('event_attendances').update({ status }).eq('token', token).select().single();
   }
 };
-
 // ============================================================================
 // SERVIÇO DE INVENTÁRIO
 // ============================================================================
