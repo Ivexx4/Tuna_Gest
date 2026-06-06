@@ -146,6 +146,9 @@ export const inventoryService = {
   async updateItem(itemId: number, updates: Partial<Omit<InventoryItem, 'id' | 'tuna_id' | 'created_at'>>) {
     return supabase.from('inventory_items').update(updates).eq('id', itemId).select().single();
   },
+  async deleteItem(itemId: number) { 
+    return supabase.from('inventory_items').delete().eq('id', itemId); 
+  },
   async uploadImage(file: File, itemId: number, tunaId: number) {
     const filePath = `inventory_images/${tunaId}/${itemId}/${Math.random()}`;
     const { error } = await supabase.storage.from('tuna-manager-bucket').upload(filePath, file);
