@@ -69,6 +69,26 @@ export const eventService = {
   async deleteEvent(eventId: number) {
     return supabase.from('events').delete().eq('id', eventId);
   },
+
+  // 👇 ADICIONA ESTAS DUAS FUNÇÕES ABAIXO 👇
+
+  async getAttendanceByToken(token: string) {
+    return supabase
+      .from('event_attendances')
+      // Faz o join com os eventos e membros para corresponder ao tipo EventAttendanceWithDetails
+      .select('*, event:events(*), member:members(*)') 
+      .eq('token', token)
+      .single();
+  },
+
+  async updateAttendanceByToken(token: string, status: 'confirmed' | 'declined' | 'absent') {
+    return supabase
+      .from('event_attendances')
+      .update({ status })
+      .eq('token', token)
+      .select()
+      .single();
+  }
 };
 
 // ============================================================================
