@@ -933,6 +933,18 @@ export const userService = {
   },
 
   /**
+   * Criar novo utilizador (registo manual na tabela pública)
+   */
+  async createUser(userData: any) {
+    const { data, error } = await supabase
+      .from('users')
+      .insert([userData])
+      .select()
+      .single();
+    return { data, error };
+  },
+
+  /**
    * Atualizar utilizador
    */
   async updateUser(
