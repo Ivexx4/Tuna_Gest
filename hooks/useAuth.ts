@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+'use client';
+
+import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 
@@ -12,10 +14,11 @@ export interface UseAuthReturn {
   signUpWithEmail: (email: string, password: string) => Promise<void>;
 }
 
-/**
- * Hook para gerir autenticação com Supabase
- */
-export function useAuth(): UseAuthReturn {
+// 1. Criação do Contexto
+const AuthContext = createContext<UseAuthReturn | undefined>(undefined);
+
+// 2. Exportação do AuthProvider (Isto resolve o teu erro no build)
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,14 +95,26 @@ export function useAuth(): UseAuthReturn {
     }
   };
 
-  return {
-    user,
-    loading,
-    error,
-    isAuthenticated: user !== null,
-    logout,
-    signInWithEmail,
-    signUpWithEmail,
-  };
+  return (
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      error,
+      isAuthenticated: user !== null,
+      logout,
+      signInWithEmail,
+      signUpWithEmail
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
+// 3. Atualização do hook para consumir o Contexto
+export function useAuth(): UseAuthReturn {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
