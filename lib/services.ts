@@ -152,6 +152,19 @@ export const inventoryService = {
     if (error) return { data: null, error };
     return { data: { publicUrl: supabase.storage.from('tuna-manager-bucket').getPublicUrl(filePath).data.publicUrl }, error: null };
   },
+  async getCurrentLoans(tunaId?: number) {
+    const { data, error } = await supabase
+      .from('inventory_loans')
+      .select('*, item:inventory_items(*), member:members(*)')
+      .is('return_date', null); // Filtra apenas itens que ainda não foram devolvidos
+    
+    // Se o tunaId for passado, filtra os resultados para essa tuna específica
+    const filteredData = tunaId !== undefined && data 
+      ? data.filter(loan => (loan.item as any)?.tuna_id === tunaId) 
+      : data;
+      
+    return { data: filteredData, error };
+  },
   async getOverdueLoans(tunaId: number) {
     const { data, error } = await supabase
       .from('inventory_loans')
