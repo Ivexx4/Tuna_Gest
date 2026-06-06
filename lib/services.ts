@@ -263,3 +263,120 @@ export const userService = {
     return supabase.from('users').delete().eq('id', userId);
   },
 };
+
+// ============================================================================
+// SERVIÇO DE SECÇÕES / NAIPES (INSTRUMENT SECTIONS)
+// ============================================================================
+
+export const instrumentSectionService = {
+  async getSections() {
+    return supabase.from('instrument_sections').select('*');
+  },
+  
+  async getSection(id: number) {
+    return supabase.from('instrument_sections').select('*').eq('id', id).single();
+  },
+  
+  async createSection(data: any) {
+    return supabase.from('instrument_sections').insert([data]).select().single();
+  },
+  
+  async updateSection(id: number, data: any) {
+    return supabase.from('instrument_sections').update(data).eq('id', id).select().single();
+  },
+  
+  async deleteSection(id: number) {
+    return supabase.from('instrument_sections').delete().eq('id', id);
+  }
+};
+
+
+// ============================================================================
+// SERVIÇO DE CATEGORIAS FINANCEIRAS
+// ============================================================================
+
+export const categoryService = {
+  async getCategories() {
+    return supabase.from('financial_categories').select('*');
+  },
+  
+  async getCategory(id: number) {
+    return supabase.from('financial_categories').select('*').eq('id', id).single();
+  },
+  
+  async createCategory(data: any) {
+    return supabase.from('financial_categories').insert([data]).select().single();
+  },
+  
+  async updateCategory(id: number, data: any) {
+    return supabase.from('financial_categories').update(data).eq('id', id).select().single();
+  },
+  
+  async deleteCategory(id: number) {
+    return supabase.from('financial_categories').delete().eq('id', id);
+  }
+};
+
+
+// ============================================================================
+// SERVIÇO FINANCEIRO
+// ============================================================================
+
+export const financialService = {
+  async getTransactions() {
+    return supabase.from('financial_transactions').select('*').order('date', { ascending: false });
+  },
+
+  async getTransaction(id: number) {
+    return supabase.from('financial_transactions').select('*').eq('id', id).single();
+  },
+
+  async createTransaction(transaction: Omit<FinancialTransaction, 'id' | 'created_at' | 'updated_at'>) {
+    return supabase.from('financial_transactions').insert([transaction]).select().single();
+  },
+
+  async updateTransaction(id: number, updates: any) {
+    return supabase.from('financial_transactions').update(updates).eq('id', id).select().single();
+  },
+
+  async deleteTransaction(id: number) {
+    return supabase.from('financial_transactions').delete().eq('id', id);
+  },
+
+  async uploadAttachment(file: File, tunaId: number, folder: string) {
+    const filePath = `${folder}/${tunaId}/${Date.now()}`;
+    const { error } = await supabase.storage.from('tuna-manager-bucket').upload(filePath, file);
+    if (error) return { data: null, error };
+    return { data: { publicUrl: supabase.storage.from('tuna-manager-bucket').getPublicUrl(filePath).data.publicUrl }, error: null };
+  },
+};
+
+// ============================================================================
+// SERVIÇO DE PARTITURAS / MÚSICA
+// ============================================================================
+
+export const musicService = {
+  async getMusics() {
+    return supabase.from('sheet_music').select('*');
+  },
+
+  async getMusic(id: number) {
+    return supabase.from('sheet_music').select('*').eq('id', id).single();
+  },
+
+  async createMusic(data: any) {
+    return supabase.from('sheet_music').insert([data]).select().single();
+  },
+
+  async updateMusic(id: number, data: any) {
+    return supabase.from('sheet_music').update(data).eq('id', id).select().single();
+  },
+
+  async deleteMusic(id: number) {
+    return supabase.from('sheet_music').delete().eq('id', id);
+  },
+
+  async recordPractice(sheetMusicId: number, eventId: number | null, status: string, feedback?: string) {
+    return supabase.from('music_practices').insert([{ sheet_music_id: sheetMusicId, event_id: eventId, status, feedback, practiced_at: new Date().toISOString() }]).select().single();
+  },
+};
