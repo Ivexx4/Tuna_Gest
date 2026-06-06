@@ -187,10 +187,10 @@ export const financialTransactionSchema = z.object({
     .max(255, 'Nome muito longo')
     .optional()
     .or(z.literal('')),
+
+  // ADICIONAR ESTA LINHA:
+  attachments: z.array(z.string()).optional(),
 });
-
-export type FinancialFormData = z.infer<typeof financialTransactionSchema>;
-
 // Schema de validação para partituras
 export const sheetMusicSchema = z.object({
   title: z
