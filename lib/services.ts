@@ -155,6 +155,46 @@ export const inventoryService = {
     if (error) return { data: null, error };
     return { data: { publicUrl: supabase.storage.from('tuna-manager-bucket').getPublicUrl(filePath).data.publicUrl }, error: null };
   },
+  async getLoan(loanId: number) {
+    return supabase
+      .from('inventory_loans')
+      .select('*, item:inventory_items(*), member:members(*)')
+      .eq('id', loanId)
+      .single();
+  },
+  async getLoans(tunaId?: number) {
+    let query = supabase.from('inventory_loans').select('*, item:inventory_items(*), member:members(*)');
+    // Se precisarmos de filtrar por tuna, fazemos através do item associado
+    if (tunaId) {
+       // O Supabase tem uma sintaxe específica para filtrar por tabelas relacionadas, 
+       // mas para evitar erros de tipagem complexos no TypeScript, retornamos todos e filtramos no cliente
+       const { data, error } = await query;
+       const filteredData = data ? data.filter(loan => (loan.item as any)?.tuna_id === tunaId) : null;
+       return { data: filteredData, error };
+    }
+    return query;
+  },
+  async returnLoan(loanId: number, condition?: string, returnedBy?: string) {
+    const { data: loan, error } = await supabase
+      .from('inventory_loans')
+      .update({ 
+        return_date: new Date().toISOString(),
+        return_condition: condition,
+        returned_by: returnedBy
+      })
+      .eq('id', loanId)
+      .select()
+      .single();
+      
+    if (loan && !error) {
+      await supabase
+        .from('inventory_items')
+        .update({ status: 'available' })
+        .eq('id', loan.item_id);
+    }
+    
+    return { data: loan, error };
+  },
   async getCurrentLoans(tunaId?: number) {
     const { data, error } = await supabase
       .from('inventory_loans')
@@ -180,9 +220,7 @@ export const inventoryService = {
   },
 };
 
-// ============================================================================
-// SERVIÇO FINANCEIRO
-// ============================================================================
+
 // ============================================================================
 // SERVIÇO FINANCEIRO E DE CATEGORIAS
 // ============================================================================
