@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { Member, Role, Section } from '@/types/database';
+import { Member, HierarchyRole, InstrumentSection } from '@/types/database';
 import { User, Mail, Phone, Calendar, Users, Briefcase } from 'lucide-react';
 
 interface MemberCardProps {
   member: Member;
-  role?: Role;
-  section?: Section;
+  role?: HierarchyRole;
+  section?: InstrumentSection;
   showLink?: boolean;
 }
 
