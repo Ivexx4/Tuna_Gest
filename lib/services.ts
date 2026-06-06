@@ -181,7 +181,10 @@ export const categoryService = {
 // SERVIÇO DE PARTITURAS / MÚSICA
 // ============================================================================
 export const musicService = {
-  // 👇 Corrigido aqui também por precaução
+  // 👇 Aqui está a função que o Dashboard estava a pedir
+  async getSheetMusic(tunaId: number) { return supabase.from('sheet_music').select('*').eq('tuna_id', tunaId); },
+  
+  // Mantemos as outras intactas para não quebrar o resto da app
   async getMusics(tunaId: number) { return supabase.from('sheet_music').select('*').eq('tuna_id', tunaId); },
   async getMusic(id: number) { return supabase.from('sheet_music').select('*').eq('id', id).single(); },
   async createMusic(data: any) { return supabase.from('sheet_music').insert([data]).select().single(); },
