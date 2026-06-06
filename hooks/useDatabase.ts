@@ -10,16 +10,16 @@ export interface UseFetchReturn<T> {
   count: number | null;
 }
 
-export interface UseMutationReturn<T> {
+// Corrigido: Agora a interface permite especificar o tipo do argumento (D)
+// que a função execute recebe, separadamente do tipo da entidade (T)
+export interface UseMutationReturn<T, D = T> {
   loading: boolean;
   error: PostgrestError | null;
-  execute: (data: T) => Promise<any>;
+  execute: (data: D) => Promise<any>;
 }
 
 /**
  * Hook genérico para buscar dados de uma tabela
- * @param tableName - Nome da tabela no Supabase
- * @param query - Função para customizar a query
  */
 export function useFetch<T>(
   tableName: string,
@@ -53,7 +53,6 @@ export function useFetch<T>(
     }
   }, [tableName, query]);
 
-  // Executar fetch ao montar componente
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -78,7 +77,6 @@ export function useInsert<T>(tableName: string): UseMutationReturn<T> {
     async (data: T) => {
       try {
         setLoading(true);
-        // Cast para 'any' para evitar erros de tipagem estrita do Supabase SDK
         const { data: result, error: err } = await (supabase.from(tableName) as any)
           .insert([data])
           .select();
@@ -102,7 +100,8 @@ export function useInsert<T>(tableName: string): UseMutationReturn<T> {
 /**
  * Hook para atualizar dados
  */
-export function useUpdate<T>(tableName: string): UseMutationReturn<T> {
+// Corrigido: Passamos dois tipos, T (para o resultado) e D (para o dado de entrada com ID)
+export function useUpdate<T>(tableName: string): UseMutationReturn<T, T & { id: number }> {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<PostgrestError | null>(null);
 
@@ -111,7 +110,6 @@ export function useUpdate<T>(tableName: string): UseMutationReturn<T> {
       try {
         setLoading(true);
         const { id, ...updateData } = data;
-        // Cast para 'any' para evitar erros de tipagem estrita do Supabase SDK
         const { data: result, error: err } = await (supabase.from(tableName) as any)
           .update(updateData)
           .eq('id', id)
