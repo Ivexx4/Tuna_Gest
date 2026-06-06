@@ -6,63 +6,38 @@ import {
   EventAttendance, FinancialCategory, MusicPractice 
 } from '@/types/database';
 import { PostgrestError } from '@supabase/supabase-js';
+
 // ============================================================================
 // SERVIÇO DE TUNAS
 // ============================================================================
-
 export const tunaService = {
-  // Obter detalhes de uma tuna específica
   async getTuna(tunaId: number) {
-    return supabase
-      .from('tunas')
-      .select('*')
-      .eq('id', tunaId)
-      .single();
+    return supabase.from('tunas').select('*').eq('id', tunaId).single();
   },
-
-  // Atualizar os detalhes da tuna
   async updateTuna(tunaId: number, updates: any) {
-    return supabase
-      .from('tunas')
-      .update(updates)
-      .eq('id', tunaId)
-      .select()
-      .single();
+    return supabase.from('tunas').update(updates).eq('id', tunaId).select().single();
   },
-
-  // Obter todas as tunas (caso precises noutro lado)
   async getTunas() {
-    return supabase
-      .from('tunas')
-      .select('*');
+    return supabase.from('tunas').select('*');
   },
-
-  // Criar uma nova tuna
   async createTuna(tuna: any) {
-    return supabase
-      .from('tunas')
-      .insert([tuna])
-      .select()
-      .single();
+    return supabase.from('tunas').insert([tuna]).select().single();
   }
 };
+
 // ============================================================================
 // SERVIÇO DE MEMBROS
 // ============================================================================
-
 export const memberService = {
   async getMembers(tunaId: number): Promise<{ data: MemberWithRelations[] | null; error: PostgrestError | null; }> {
     return supabase.from('members').select('*, role:hierarchy_roles(*), section:instrument_sections(*)').eq('tuna_id', tunaId);
   },
-
   async getMember(memberId: number): Promise<{ data: MemberWithRelations | null; error: PostgrestError | null; }> {
     return supabase.from('members').select('*, role:hierarchy_roles(*), section:instrument_sections(*)').eq('id', memberId).single();
   },
-
   async createMember(member: Omit<Member, 'id' | 'created_at' | 'updated_at'>) {
     return supabase.from('members').insert([member]).select().single();
   },
-
   async updateMember(memberId: number, updates: Partial<Omit<Member, 'id' | 'tuna_id' | 'created_at'>>, changedByUserId?: string) {
     const { data: currentMember } = await supabase.from('members').select('role_id').eq('id', memberId).single();
     const oldRoleId = currentMember?.role_id || null;
@@ -71,137 +46,94 @@ export const memberService = {
     if (newRoleId !== null && newRoleId !== oldRoleId) {
       await memberService.recordRoleChange(memberId, oldRoleId, newRoleId, changedByUserId);
     }
-
     return supabase.from('members').update(updates).eq('id', memberId).select().single();
   },
-
   async deleteMember(memberId: number) {
     return supabase.from('members').delete().eq('id', memberId);
   },
-
   async recordRoleChange(memberId: number, oldRoleId: number | null, newRoleId: number, changedBy?: string) {
     return supabase.from('member_role_history').insert([{ member_id: memberId, old_role_id: oldRoleId, new_role_id: newRoleId, changed_by: changedBy }]);
   },
-
   async getMemberRoleHistory(memberId: number) {
     return supabase.from('member_role_history').select('*, old_role:hierarchy_roles!old_role_id(*), new_role:hierarchy_roles!new_role_id(*)').eq('member_id', memberId).order('changed_at', { ascending: false });
   },
 };
+
 // ============================================================================
 // SERVIÇO DE CARGOS HIERÁRQUICOS (HIERARCHY ROLES)
 // ============================================================================
-
 export const hierarchyRoleService = {
-  // Obter todos os cargos (útil para a tabela principal)
   async getRoles() {
-    return supabase
-      .from('hierarchy_roles')
-      .select('*')
-      .order('level', { ascending: true });
+    return supabase.from('hierarchy_roles').select('*').order('level', { ascending: true });
   },
-
-  // Obter um cargo específico pelo ID (usado na página de edição)
   async getRole(roleId: number) {
-    return supabase
-      .from('hierarchy_roles')
-      .select('*')
-      .eq('id', roleId)
-      .single();
+    return supabase.from('hierarchy_roles').select('*').eq('id', roleId).single();
   },
-
-  // Criar um novo cargo
   async createRole(role: Omit<HierarchyRole, 'id' | 'created_at' | 'updated_at'>) {
-    return supabase
-      .from('hierarchy_roles')
-      .insert([role])
-      .select()
-      .single();
+    return supabase.from('hierarchy_roles').insert([role]).select().single();
   },
-
-  // Atualizar um cargo existente (usado na página de edição)
   async updateRole(roleId: number, updates: Partial<Omit<HierarchyRole, 'id' | 'created_at'>>) {
-    return supabase
-      .from('hierarchy_roles')
-      .update(updates)
-      .eq('id', roleId)
-      .select()
-      .single();
+    return supabase.from('hierarchy_roles').update(updates).eq('id', roleId).select().single();
   },
-
-  // Apagar um cargo
   async deleteRole(roleId: number) {
-    return supabase
-      .from('hierarchy_roles')
-      .delete()
-      .eq('id', roleId);
+    return supabase.from('hierarchy_roles').delete().eq('id', roleId);
   }
 };
+
+// ============================================================================
+// SERVIÇO DE SECÇÕES / NAIPES (INSTRUMENT SECTIONS)
+// ============================================================================
+export const instrumentSectionService = {
+  async getSections() { return supabase.from('instrument_sections').select('*'); },
+  async getSection(id: number) { return supabase.from('instrument_sections').select('*').eq('id', id).single(); },
+  async createSection(data: any) { return supabase.from('instrument_sections').insert([data]).select().single(); },
+  async updateSection(id: number, data: any) { return supabase.from('instrument_sections').update(data).eq('id', id).select().single(); },
+  async deleteSection(id: number) { return supabase.from('instrument_sections').delete().eq('id', id); }
+};
+
 // ============================================================================
 // SERVIÇO DE EVENTOS
 // ============================================================================
-
 export const eventService = {
   async getEvents(tunaId: number) {
     return supabase.from('events').select('*').eq('tuna_id', tunaId).order('event_date', { ascending: false });
   },
-
   async createEvent(event: Omit<Event, 'id' | 'created_at' | 'updated_at'>) {
     return supabase.from('events').insert([event]).select().single();
   },
-
   async updateEvent(eventId: number, updates: Partial<Omit<Event, 'id' | 'tuna_id' | 'created_at'>>) {
     return supabase.from('events').update(updates).eq('id', eventId).select().single();
   },
-
   async deleteEvent(eventId: number) {
     return supabase.from('events').delete().eq('id', eventId);
   },
-
-  // 👇 ADICIONA ESTAS DUAS FUNÇÕES ABAIXO 👇
-
   async getAttendanceByToken(token: string) {
-    return supabase
-      .from('event_attendances')
-      // Faz o join com os eventos e membros para corresponder ao tipo EventAttendanceWithDetails
-      .select('*, event:events(*), member:members(*)') 
-      .eq('token', token)
-      .single();
+    return supabase.from('event_attendances').select('*, event:events(*), member:members(*)').eq('token', token).single();
   },
-
   async updateAttendanceByToken(token: string, status: 'confirmed' | 'declined' | 'absent') {
-    return supabase
-      .from('event_attendances')
-      .update({ status })
-      .eq('token', token)
-      .select()
-      .single();
+    return supabase.from('event_attendances').update({ status }).eq('token', token).select().single();
   }
 };
 
 // ============================================================================
 // SERVIÇO DE INVENTÁRIO
 // ============================================================================
-
 export const inventoryService = {
   async getItems(tunaId: number) {
     return supabase.from('inventory_items').select('*').eq('tuna_id', tunaId);
   },
-
   async createItem(item: Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'>) {
     return supabase.from('inventory_items').insert([item]).select().single();
   },
-
   async updateItem(itemId: number, updates: Partial<Omit<InventoryItem, 'id' | 'tuna_id' | 'created_at'>>) {
     return supabase.from('inventory_items').update(updates).eq('id', itemId).select().single();
   },
-
   async uploadImage(file: File, itemId: number, tunaId: number) {
     const filePath = `inventory_images/${tunaId}/${itemId}/${Math.random()}`;
     const { error } = await supabase.storage.from('tuna-manager-bucket').upload(filePath, file);
     if (error) return { data: null, error };
     return { data: { publicUrl: supabase.storage.from('tuna-manager-bucket').getPublicUrl(filePath).data.publicUrl }, error: null };
   },
-
   async getOverdueLoans(tunaId: number) {
     const { data, error } = await supabase
       .from('inventory_loans')
@@ -209,7 +141,6 @@ export const inventoryService = {
       .is('return_date', null)
       .not('due_date', 'is', null)
       .lt('due_date', new Date().toISOString());
-
     const filteredData = data ? data.filter(loan => (loan.item as any).tuna_id === tunaId) : null;
     return { data: filteredData, error };
   },
@@ -218,12 +149,12 @@ export const inventoryService = {
 // ============================================================================
 // SERVIÇO FINANCEIRO
 // ============================================================================
-
 export const financialService = {
-  async createTransaction(transaction: Omit<FinancialTransaction, 'id' | 'created_at' | 'updated_at'>) {
-    return supabase.from('financial_transactions').insert([transaction]).select().single();
-  },
-
+  async getTransactions() { return supabase.from('financial_transactions').select('*').order('date', { ascending: false }); },
+  async getTransaction(id: number) { return supabase.from('financial_transactions').select('*').eq('id', id).single(); },
+  async createTransaction(transaction: Omit<FinancialTransaction, 'id' | 'created_at' | 'updated_at'>) { return supabase.from('financial_transactions').insert([transaction]).select().single(); },
+  async updateTransaction(id: number, updates: any) { return supabase.from('financial_transactions').update(updates).eq('id', id).select().single(); },
+  async deleteTransaction(id: number) { return supabase.from('financial_transactions').delete().eq('id', id); },
   async uploadAttachment(file: File, tunaId: number, folder: string) {
     const filePath = `${folder}/${tunaId}/${Date.now()}`;
     const { error } = await supabase.storage.from('tuna-manager-bucket').upload(filePath, file);
@@ -233,10 +164,25 @@ export const financialService = {
 };
 
 // ============================================================================
-// SERVIÇO DE PARTITURAS
+// SERVIÇO DE CATEGORIAS FINANCEIRAS
 // ============================================================================
+export const categoryService = {
+  async getCategories() { return supabase.from('financial_categories').select('*'); },
+  async getCategory(id: number) { return supabase.from('financial_categories').select('*').eq('id', id).single(); },
+  async createCategory(data: any) { return supabase.from('financial_categories').insert([data]).select().single(); },
+  async updateCategory(id: number, data: any) { return supabase.from('financial_categories').update(data).eq('id', id).select().single(); },
+  async deleteCategory(id: number) { return supabase.from('financial_categories').delete().eq('id', id); }
+};
 
+// ============================================================================
+// SERVIÇO DE PARTITURAS / MÚSICA
+// ============================================================================
 export const musicService = {
+  async getMusics() { return supabase.from('sheet_music').select('*'); },
+  async getMusic(id: number) { return supabase.from('sheet_music').select('*').eq('id', id).single(); },
+  async createMusic(data: any) { return supabase.from('sheet_music').insert([data]).select().single(); },
+  async updateMusic(id: number, data: any) { return supabase.from('sheet_music').update(data).eq('id', id).select().single(); },
+  async deleteMusic(id: number) { return supabase.from('sheet_music').delete().eq('id', id); },
   async recordPractice(sheetMusicId: number, eventId: number | null, status: string, feedback?: string) {
     return supabase.from('music_practices').insert([{ sheet_music_id: sheetMusicId, event_id: eventId, status, feedback, practiced_at: new Date().toISOString() }]).select().single();
   },
@@ -245,138 +191,9 @@ export const musicService = {
 // ============================================================================
 // SERVIÇO DE UTILIZADORES
 // ============================================================================
-
 export const userService = {
-  async getUsers() {
-    return supabase.from('users').select('*');
-  },
-
-  async createUser(userData: any) {
-    return supabase.from('users').insert([userData]).select().single();
-  },
-
-  async updateUser(userId: string, updates: any) {
-    return supabase.from('users').update(updates).eq('id', userId).select().single();
-  },
-
-  async deleteUser(userId: string) {
-    return supabase.from('users').delete().eq('id', userId);
-  },
-};
-
-// ============================================================================
-// SERVIÇO DE SECÇÕES / NAIPES (INSTRUMENT SECTIONS)
-// ============================================================================
-
-export const instrumentSectionService = {
-  async getSections() {
-    return supabase.from('instrument_sections').select('*');
-  },
-  
-  async getSection(id: number) {
-    return supabase.from('instrument_sections').select('*').eq('id', id).single();
-  },
-  
-  async createSection(data: any) {
-    return supabase.from('instrument_sections').insert([data]).select().single();
-  },
-  
-  async updateSection(id: number, data: any) {
-    return supabase.from('instrument_sections').update(data).eq('id', id).select().single();
-  },
-  
-  async deleteSection(id: number) {
-    return supabase.from('instrument_sections').delete().eq('id', id);
-  }
-};
-
-
-// ============================================================================
-// SERVIÇO DE CATEGORIAS FINANCEIRAS
-// ============================================================================
-
-export const categoryService = {
-  async getCategories() {
-    return supabase.from('financial_categories').select('*');
-  },
-  
-  async getCategory(id: number) {
-    return supabase.from('financial_categories').select('*').eq('id', id).single();
-  },
-  
-  async createCategory(data: any) {
-    return supabase.from('financial_categories').insert([data]).select().single();
-  },
-  
-  async updateCategory(id: number, data: any) {
-    return supabase.from('financial_categories').update(data).eq('id', id).select().single();
-  },
-  
-  async deleteCategory(id: number) {
-    return supabase.from('financial_categories').delete().eq('id', id);
-  }
-};
-
-
-// ============================================================================
-// SERVIÇO FINANCEIRO
-// ============================================================================
-
-export const financialService = {
-  async getTransactions() {
-    return supabase.from('financial_transactions').select('*').order('date', { ascending: false });
-  },
-
-  async getTransaction(id: number) {
-    return supabase.from('financial_transactions').select('*').eq('id', id).single();
-  },
-
-  async createTransaction(transaction: Omit<FinancialTransaction, 'id' | 'created_at' | 'updated_at'>) {
-    return supabase.from('financial_transactions').insert([transaction]).select().single();
-  },
-
-  async updateTransaction(id: number, updates: any) {
-    return supabase.from('financial_transactions').update(updates).eq('id', id).select().single();
-  },
-
-  async deleteTransaction(id: number) {
-    return supabase.from('financial_transactions').delete().eq('id', id);
-  },
-
-  async uploadAttachment(file: File, tunaId: number, folder: string) {
-    const filePath = `${folder}/${tunaId}/${Date.now()}`;
-    const { error } = await supabase.storage.from('tuna-manager-bucket').upload(filePath, file);
-    if (error) return { data: null, error };
-    return { data: { publicUrl: supabase.storage.from('tuna-manager-bucket').getPublicUrl(filePath).data.publicUrl }, error: null };
-  },
-};
-
-// ============================================================================
-// SERVIÇO DE PARTITURAS / MÚSICA
-// ============================================================================
-
-export const musicService = {
-  async getMusics() {
-    return supabase.from('sheet_music').select('*');
-  },
-
-  async getMusic(id: number) {
-    return supabase.from('sheet_music').select('*').eq('id', id).single();
-  },
-
-  async createMusic(data: any) {
-    return supabase.from('sheet_music').insert([data]).select().single();
-  },
-
-  async updateMusic(id: number, data: any) {
-    return supabase.from('sheet_music').update(data).eq('id', id).select().single();
-  },
-
-  async deleteMusic(id: number) {
-    return supabase.from('sheet_music').delete().eq('id', id);
-  },
-
-  async recordPractice(sheetMusicId: number, eventId: number | null, status: string, feedback?: string) {
-    return supabase.from('music_practices').insert([{ sheet_music_id: sheetMusicId, event_id: eventId, status, feedback, practiced_at: new Date().toISOString() }]).select().single();
-  },
+  async getUsers() { return supabase.from('users').select('*'); },
+  async createUser(userData: any) { return supabase.from('users').insert([userData]).select().single(); },
+  async updateUser(userId: string, updates: any) { return supabase.from('users').update(updates).eq('id', userId).select().single(); },
+  async deleteUser(userId: string) { return supabase.from('users').delete().eq('id', userId); },
 };
