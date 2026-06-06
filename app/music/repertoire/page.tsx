@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 
 type SheetMusicWithLatestPractice = SheetMusic & {
   latest_status?: 'learning' | 'rehearsing' | 'performed' | 'mastered';
+  practices?: MusicPractice[]; // <-- ESTA É A LINHA QUE RESOLVE O ERRO
 };
 
 export default function RepertoirePage() {
@@ -37,15 +38,20 @@ export default function RepertoirePage() {
   useEffect(() => {
     if (sheetMusic) {
       const categorizedRepertoire = {
-        learning: [],
-        rehearsing: [],
-        performed: [],
-        mastered: [],
+        learning: [] as SheetMusicWithLatestPractice[],
+        rehearsing: [] as SheetMusicWithLatestPractice[],
+        performed: [] as SheetMusicWithLatestPractice[],
+        mastered: [] as SheetMusicWithLatestPractice[],
       };
 
       sheetMusic.forEach(music => {
         if (music.practices && music.practices.length > 0) {
-          const latestPractice = music.practices.sort((a, b) => new Date(b.practiced_at).getTime() - new Date(a.practiced_at).getTime())[0];
+          // Ordenação segura contra valores null ou undefined no practiced_at
+          const latestPractice = music.practices.sort((a, b) => {
+            const timeA = a.practiced_at ? new Date(a.practiced_at).getTime() : 0;
+            const timeB = b.practiced_at ? new Date(b.practiced_at).getTime() : 0;
+            return timeB - timeA;
+          })[0];
           music.latest_status = latestPractice.status;
         } else {
           music.latest_status = 'learning'; // Default status
