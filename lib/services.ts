@@ -6,7 +6,46 @@ import {
   EventAttendance, FinancialCategory, MusicPractice 
 } from '@/types/database';
 import { PostgrestError } from '@supabase/supabase-js';
+// ============================================================================
+// SERVIÇO DE TUNAS
+// ============================================================================
 
+export const tunaService = {
+  // Obter detalhes de uma tuna específica
+  async getTuna(tunaId: number) {
+    return supabase
+      .from('tunas')
+      .select('*')
+      .eq('id', tunaId)
+      .single();
+  },
+
+  // Atualizar os detalhes da tuna
+  async updateTuna(tunaId: number, updates: any) {
+    return supabase
+      .from('tunas')
+      .update(updates)
+      .eq('id', tunaId)
+      .select()
+      .single();
+  },
+
+  // Obter todas as tunas (caso precises noutro lado)
+  async getTunas() {
+    return supabase
+      .from('tunas')
+      .select('*');
+  },
+
+  // Criar uma nova tuna
+  async createTuna(tuna: any) {
+    return supabase
+      .from('tunas')
+      .insert([tuna])
+      .select()
+      .single();
+  }
+};
 // ============================================================================
 // SERVIÇO DE MEMBROS
 // ============================================================================
