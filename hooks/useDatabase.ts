@@ -10,8 +10,8 @@ export interface UseFetchReturn<T> {
   count: number | null;
 }
 
-// Corrigido: Agora a interface permite especificar o tipo do argumento (D)
-// que a função execute recebe, separadamente do tipo da entidade (T)
+// Corrigido: Agora a interface aceita um tipo D para o dado de entrada (data)
+// separadamente do tipo T (que é o que a tabela retorna)
 export interface UseMutationReturn<T, D = T> {
   loading: boolean;
   error: PostgrestError | null;
@@ -43,7 +43,7 @@ export function useFetch<T>(
 
       if (err) throw err;
 
-      setData(result as T[]);
+      setData((result as T[]) || []);
       setCount(resultCount);
       setError(null);
     } catch (err) {
@@ -53,6 +53,7 @@ export function useFetch<T>(
     }
   }, [tableName, query]);
 
+  // CORREÇÃO: useEffect em vez de useState para side-effects ao montar
   useEffect(() => {
     fetchData();
   }, [fetchData]);
@@ -77,6 +78,7 @@ export function useInsert<T>(tableName: string): UseMutationReturn<T> {
     async (data: T) => {
       try {
         setLoading(true);
+        // Cast para 'any' para evitar que o SDK do Supabase valide excessivamente o tipo T
         const { data: result, error: err } = await (supabase.from(tableName) as any)
           .insert([data])
           .select();
@@ -100,7 +102,7 @@ export function useInsert<T>(tableName: string): UseMutationReturn<T> {
 /**
  * Hook para atualizar dados
  */
-// Corrigido: Passamos dois tipos, T (para o resultado) e D (para o dado de entrada com ID)
+// Corrigido: D = T & { id: number } para permitir o ID no objeto de entrada
 export function useUpdate<T>(tableName: string): UseMutationReturn<T, T & { id: number }> {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<PostgrestError | null>(null);
@@ -110,6 +112,7 @@ export function useUpdate<T>(tableName: string): UseMutationReturn<T, T & { id: 
       try {
         setLoading(true);
         const { id, ...updateData } = data;
+        // Cast para 'any' para evitar erros de tipagem estrita
         const { data: result, error: err } = await (supabase.from(tableName) as any)
           .update(updateData)
           .eq('id', id)
